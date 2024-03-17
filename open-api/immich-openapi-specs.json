@@ -8005,6 +8005,7 @@
         "type": "string"
       },
       "AssetOrder": {
+        "default": "desc",
         "enum": [
           "asc",
           "desc"
@@ -9555,6 +9556,9 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "order"
+        ],
         "type": "object"
       },
       "OAuthAuthorizeResponseDto": {

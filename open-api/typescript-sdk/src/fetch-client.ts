@@ -740,7 +740,7 @@ export type MetadataSearchDto = {
     libraryId?: string | null;
     make?: string;
     model?: string | null;
-    order?: AssetOrder;
+    order: AssetOrder;
     originalFileName?: string;
     originalPath?: string;
     page?: number;
