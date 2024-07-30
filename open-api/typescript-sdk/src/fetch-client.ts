@@ -190,6 +190,10 @@ export type SmartInfoResponseDto = {
     objects?: string[] | null;
     tags?: string[] | null;
 };
+export type AssetStackResponseDto = {
+    assetCount: number;
+    id: string;
+};
 export type TagResponseDto = {
     id: string;
     name: string;
@@ -224,9 +228,7 @@ export type AssetResponseDto = {
     people?: PersonWithFacesResponseDto[];
     resized: boolean;
     smartInfo?: SmartInfoResponseDto;
-    stack?: AssetResponseDto[];
-    stackCount: number | null;
-    stackParentId?: string | null;
+    stack?: (AssetStackResponseDto) | null;
     tags?: TagResponseDto[];
     thumbhash: string | null;
     "type": AssetTypeEnum;
@@ -340,8 +342,6 @@ export type AssetBulkUpdateDto = {
     latitude?: number;
     longitude?: number;
     rating?: number;
-    removeParent?: boolean;
-    stackParentId?: string;
 };
 export type AssetBulkUploadCheckItem = {
     /** base64 or hex encoded sha1 hash */
@@ -374,10 +374,6 @@ export type AssetJobsDto = {
 export type MemoryLaneResponseDto = {
     assets: AssetResponseDto[];
     yearsAgo: number;
-};
-export type UpdateStackParentDto = {
-    newParentId: string;
-    oldParentId: string;
 };
 export type AssetStatsResponseDto = {
     images: number;
@@ -968,6 +964,18 @@ export type AssetIdsResponseDto = {
     assetId: string;
     error?: Error2;
     success: boolean;
+};
+export type StackResponseDto = {
+    assets: AssetResponseDto[];
+    id: string;
+    primaryAssetId: string;
+};
+export type StackCreateDto = {
+    /** first asset becomes the primary */
+    assetIds: string[];
+};
+export type StackUpdateDto = {
+    primaryAssetId?: string;
 };
 export type AssetDeltaSyncDto = {
     updatedAfter: string;
@@ -1627,15 +1635,6 @@ export function getRandom({ count }: {
     }))}`, {
         ...opts
     }));
-}
-export function updateStackParent({ updateStackParentDto }: {
-    updateStackParentDto: UpdateStackParentDto;
-}, opts?: Oazapfts.RequestOpts) {
-    return oazapfts.ok(oazapfts.fetchText("/assets/stack/parent", oazapfts.json({
-        ...opts,
-        method: "PUT",
-        body: updateStackParentDto
-    })));
 }
 export function getAssetStatistics({ isArchived, isFavorite, isTrashed }: {
     isArchived?: boolean;
@@ -2700,6 +2699,70 @@ export function addSharedLinkAssets({ id, key, assetIdsDto }: {
         ...opts,
         method: "PUT",
         body: assetIdsDto
+    })));
+}
+export function deleteStacks({ bulkIdsDto }: {
+    bulkIdsDto: BulkIdsDto;
+}, opts?: Oazapfts.RequestOpts) {
+    return oazapfts.ok(oazapfts.fetchText("/stacks", oazapfts.json({
+        ...opts,
+        method: "DELETE",
+        body: bulkIdsDto
+    })));
+}
+export function searchStacks({ primaryAssetId }: {
+    primaryAssetId?: string;
+}, opts?: Oazapfts.RequestOpts) {
+    return oazapfts.ok(oazapfts.fetchJson<{
+        status: 200;
+        data: StackResponseDto[];
+    }>(`/stacks${QS.query(QS.explode({
+        primaryAssetId
+    }))}`, {
+        ...opts
+    }));
+}
+export function createStack({ stackCreateDto }: {
+    stackCreateDto: StackCreateDto;
+}, opts?: Oazapfts.RequestOpts) {
+    return oazapfts.ok(oazapfts.fetchJson<{
+        status: 201;
+        data: StackResponseDto;
+    }>("/stacks", oazapfts.json({
+        ...opts,
+        method: "POST",
+        body: stackCreateDto
+    })));
+}
+export function deleteStack({ id }: {
+    id: string;
+}, opts?: Oazapfts.RequestOpts) {
+    return oazapfts.ok(oazapfts.fetchText(`/stacks/${encodeURIComponent(id)}`, {
+        ...opts,
+        method: "DELETE"
+    }));
+}
+export function getStack({ id }: {
+    id: string;
+}, opts?: Oazapfts.RequestOpts) {
+    return oazapfts.ok(oazapfts.fetchJson<{
+        status: 200;
+        data: StackResponseDto;
+    }>(`/stacks/${encodeURIComponent(id)}`, {
+        ...opts
+    }));
+}
+export function updateStack({ id, stackUpdateDto }: {
+    id: string;
+    stackUpdateDto: StackUpdateDto;
+}, opts?: Oazapfts.RequestOpts) {
+    return oazapfts.ok(oazapfts.fetchJson<{
+        status: 200;
+        data: StackResponseDto;
+    }>(`/stacks/${encodeURIComponent(id)}`, oazapfts.json({
+        ...opts,
+        method: "PUT",
+        body: stackUpdateDto
     })));
 }
 export function getDeltaSync({ assetDeltaSyncDto }: {
